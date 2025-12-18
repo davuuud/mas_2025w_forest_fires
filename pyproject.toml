@@ -1,0 +1,9 @@
+[project]
+name = "forest_fires"
+version = "0.1.0"
+description = "Group project 'Forest Fires' of the Modeling and Simulation 2025W course"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "numpy>=2.3.5",
+]
