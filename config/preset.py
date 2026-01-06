@@ -2,13 +2,14 @@ import numpy as np
 
 class PresetGenerator:
     @classmethod
-    def get(cls, source="random", width=10, height=10, file=None):
+    def get(cls, source="random", width=10, height=10, seed=None, file=None):
         preset = None
         if source == "random":
-            preset = RandomPreset(width, height)
+            preset = RandomPreset(width, height, seed)
         else:
-            preset =  RandomPreset(width, height)
-        return preset.gene
+            #preset =  RandomPreset(width, height)
+            pass
+        return preset
 
 
 class Preset:
@@ -21,8 +22,14 @@ class Preset:
 
 
 class RandomPreset(Preset):
-    def generate(self, width, height):
-        oxygen = np.random.randint(5, size=(width, height))
-        fuel = np.random.randint(5, size=(width, height))
-        heat = np.random.randint(5, size=(width, height))
-        return (oxygen, fuel, heat)
+    def __init__(self, width, height, seed):
+        super().__init__(width,height)
+        self.seed = seed
+    
+    def generate(self):
+        rng = np.random.default_rng(self.seed)
+        oxygen = rng.integers(0, 5, size=(self.width, self.height))
+        fuel = rng.integers(0, 5, size=(self.width, self.height))
+        heat = rng.integers(0, 5, size=(self.width, self.height))
+        state = rng.integers(0, 3, size=(self.width, self.height))
+        return (oxygen, fuel, heat, state)

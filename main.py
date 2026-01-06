@@ -8,8 +8,8 @@ logger = logging.getLogger("main")
 
 def main(config_file: str, seed: int):
     config = Configuration(config_file, seed=seed)
-    #sim = Simulation(config)
-    #sim.run()
+    sim = Simulation(config)
+    sim.run(3)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
