@@ -25,7 +25,7 @@ class NeumannNeighborhood(Neighborhood):
         
         # oxygen neighborhood
         nbs_ox = np.zeros((width+2, height+2))
-        nbs_ox[1:-1,1:-1]+=oxygen #middle
+        #nbs_ox[1:-1,1:-1]+=oxygen #middle
         nbs_ox[1:-1,:-2]+=oxygen #left
         nbs_ox[1:-1,2:]+=oxygen #right
         nbs_ox[:-2,1:-1]+=oxygen #up
@@ -33,7 +33,7 @@ class NeumannNeighborhood(Neighborhood):
 
         # fuel neighborhood
         nbs_fuel = np.zeros((width+2, height+2))
-        nbs_fuel[1:-1,1:-1]+=fuel #middle
+        #nbs_fuel[1:-1,1:-1]+=fuel #middle
         nbs_fuel[1:-1,:-2]+=fuel #left
         nbs_fuel[1:-1,2:]+=fuel #right
         nbs_fuel[:-2,1:-1]+=fuel #up
@@ -41,7 +41,7 @@ class NeumannNeighborhood(Neighborhood):
         
         # heat neighborhood
         nbs_heat = np.zeros((width+2, height+2))
-        nbs_heat[1:-1,1:-1]+=heat #middle
+        #nbs_heat[1:-1,1:-1]+=heat #middle
         nbs_heat[1:-1,:-2]+=heat #left
         nbs_heat[1:-1,2:]+=heat #right
         nbs_heat[:-2,1:-1]+=heat #up
@@ -52,7 +52,7 @@ class NeumannNeighborhood(Neighborhood):
         for i in range(4):
             state_i = (state == i)
             nbs_state_i = np.zeros((width+2, height+2))
-            nbs_state_i[1:-1,1:-1]+=state_i #middle
+            #nbs_state_i[1:-1,1:-1]+=state_i #middle
             nbs_state_i[1:-1,:-2]+=state_i #left
             nbs_state_i[1:-1,2:]+=state_i #right
             nbs_state_i[:-2,1:-1]+=state_i #up
