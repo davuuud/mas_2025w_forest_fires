@@ -1,4 +1,5 @@
 import numpy as np
+from sim import State
 
 class NeighborhoodGenerator:
     @classmethod
@@ -21,36 +22,36 @@ class Neighborhood:
 class NeumannNeighborhood(Neighborhood):
     
     def calculate(self, state, width, height):
-        oxygen, fuel, heat, state = state
+        #oxygen, fuel, heat, state = state
         
         # oxygen neighborhood
         nbs_ox = np.zeros((width+2, height+2))
         #nbs_ox[1:-1,1:-1]+=oxygen #middle
-        nbs_ox[1:-1,:-2]+=oxygen #left
-        nbs_ox[1:-1,2:]+=oxygen #right
-        nbs_ox[:-2,1:-1]+=oxygen #up
-        nbs_ox[2:,1:-1]+=oxygen #down
+        nbs_ox[1:-1,:-2]+=state.oxygen #left
+        nbs_ox[1:-1,2:]+=state.oxygen #right
+        nbs_ox[:-2,1:-1]+=state.oxygen #up
+        nbs_ox[2:,1:-1]+=state.oxygen #down
 
         # fuel neighborhood
         nbs_fuel = np.zeros((width+2, height+2))
         #nbs_fuel[1:-1,1:-1]+=fuel #middle
-        nbs_fuel[1:-1,:-2]+=fuel #left
-        nbs_fuel[1:-1,2:]+=fuel #right
-        nbs_fuel[:-2,1:-1]+=fuel #up
-        nbs_fuel[2:,1:-1]+=fuel #down
+        nbs_fuel[1:-1,:-2]+=state.fuel #left
+        nbs_fuel[1:-1,2:]+=state.fuel #right
+        nbs_fuel[:-2,1:-1]+=state.fuel #up
+        nbs_fuel[2:,1:-1]+=state.fuel #down
         
         # heat neighborhood
         nbs_heat = np.zeros((width+2, height+2))
         #nbs_heat[1:-1,1:-1]+=heat #middle
-        nbs_heat[1:-1,:-2]+=heat #left
-        nbs_heat[1:-1,2:]+=heat #right
-        nbs_heat[:-2,1:-1]+=heat #up
-        nbs_heat[2:,1:-1]+=heat #down
+        nbs_heat[1:-1,:-2]+=state.heat #left
+        nbs_heat[1:-1,2:]+=state.heat #right
+        nbs_heat[:-2,1:-1]+=state.heat #up
+        nbs_heat[2:,1:-1]+=state.heat #down
         
         # state neighborhood (is array with numbers of all 4 states)
         nbs_state = []
-        for i in range(4):
-            state_i = (state == i)
+        for i in range(State.STATESCOUNT):
+            state_i = (state.cell_state == i)
             nbs_state_i = np.zeros((width+2, height+2))
             #nbs_state_i[1:-1,1:-1]+=state_i #middle
             nbs_state_i[1:-1,:-2]+=state_i #left
@@ -59,4 +60,4 @@ class NeumannNeighborhood(Neighborhood):
             nbs_state_i[2:,1:-1]+=state_i #down
             nbs_state.insert(i,nbs_state_i[1:-1,1:-1])
 
-        return [nbs_ox[1:-1,1:-1], nbs_fuel[1:-1,1:-1], nbs_heat[1:-1,1:-1], nbs_state]
+        return State(nbs_ox[1:-1,1:-1], nbs_fuel[1:-1,1:-1], nbs_heat[1:-1,1:-1], nbs_state)

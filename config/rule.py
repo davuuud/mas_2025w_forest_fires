@@ -1,5 +1,6 @@
 import numpy as np
 import logging
+from sim import State
 #from sim import Simulation
 
 class RuleGenerator:
@@ -27,22 +28,21 @@ class Rule:
 class DecreseWhenFireRule(Rule):
     
     def calculate(self, state, nbs):
-        oxygen, fuel, heat, state = state
-        mask = (state == 0)
+        mask = (state.cell_state == State.FIRE)
         
         # reduce oxygen, fuel, heat by 1 where the cell is on fire; clamp at 0
-        oxygen = np.where(mask, np.maximum(oxygen - 1, 0), oxygen)
-        fuel = np.where(mask, np.maximum(fuel - 1, 0), fuel)
-        heat = np.where(mask, np.maximum(heat - 1, 0), heat)
+        state.oxygen = np.where(mask, np.maximum(state.oxygen - 1, 0), state.oxygen)
+        state.fuel = np.where(mask, np.maximum(state.fuel - 1, 0), state.fuel)
+        state.heat = np.where(mask, np.maximum(state.heat - 1, 0), state.heat)
         
-        return (oxygen, fuel, heat, state)
+        return state
     
 class IncreaseHotForNeighborRule(Rule):
     
     def calculate(self, state, nbs):
-        oxygen, fuel, heat, state = state
-        nbs_ox, nbs_fuel, nbs_heat, nbs_state = nbs
+        #oxygen, fuel, heat, state = state
+        #nbs_ox, nbs_fuel, nbs_heat, nbs_state = nbs
         # every state with hot in the neighborhood increases hot of the cell, max 5
-        heat = np.minimum(heat+nbs_state[2],5)
+        state.heat = np.minimum(state.heat+nbs.cell_state[State.HOT],5)
         
-        return (oxygen, fuel, heat, state)
+        return state

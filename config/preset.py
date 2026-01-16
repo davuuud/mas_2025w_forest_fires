@@ -1,4 +1,5 @@
 import numpy as np
+from sim import State
 
 class PresetGenerator:
     @classmethod
@@ -32,4 +33,4 @@ class RandomPreset(Preset):
         fuel = rng.integers(0, 5, size=(self.width, self.height))
         heat = rng.integers(0, 5, size=(self.width, self.height))
         state = rng.integers(0, 3, size=(self.width, self.height))
-        return (oxygen, fuel, heat, state)
+        return State(heat,fuel,oxygen,state)
