@@ -11,7 +11,7 @@ class Visualizer:
         output_dir = Path(self.config.output_dir)
         if not output_dir.exists():
             os.mkdir(output_dir)
-        return output_dir / Path(self.config.output_pattern.format(self.frame_id))
+        return output_dir / Path(self.config.output_pattern % (self.frame_id))
 
     def write_frame(self, state):
         self.frame(state)
@@ -19,6 +19,18 @@ class Visualizer:
 
     def frame(self, state):
         pass
+
+
+class VisualizerFactory:
+    @classmethod
+    def get_visualizers(cls, config):
+        visualizers = []
+        for vis in config.visualizers:
+            if vis == "PPMCellStateVisualizer":
+                visualizers.append(PPMCellStateVisualizer(config))
+            else:
+                pass
+        return visualizers
 
 
 COLOR_MAP = {
@@ -41,5 +53,5 @@ class PPMCellStateVisualizer(Visualizer):
         cell_state = state.cell_state.flatten()
         cell_colors = [COLOR_MAP[x] for x in cell_state]
         ppm = PPM()
-        with open(self.get_output_path(), "w") as outfile:
+        with open(self.get_output_path().with_suffix(".ppm"), "w") as outfile:
             ppm.write_ppm(outfile, width, height, cell_colors)

@@ -1,17 +1,16 @@
-from visual import Visualizer, PPM
-import numpy as np
+from visual import VisualizerFactory
 
 class Simulation:
-    
-    def __init__(self, config, visualizer: Visualizer = PPM()):
+    def __init__(self, config):
         self.config = config
-        self.visualizer = visualizer
+        self.visualizers = VisualizerFactory.get_visualizers(self.config)
         self.state = self.config.preset.generate()
         print(self.state)
 
     def run(self, steps=1):
         #pass intial frame to visualizer
-        #self.visualizer.frame(self.state)
+        for v in self.visualizers:
+            v.write_frame(self.state)
 
         for step in range(steps):
             #calculate neighborhood
@@ -22,7 +21,8 @@ class Simulation:
                 self.state = rule.calculate(self.state,nbs)
             
             #pass frame to visualizer
-            #self.visualizer.frame(self.state)
+            for v in self.visualizers:
+                v.write_frame(self.state)
             print(f"##### step {step}: #####")
             print(self.state)
 

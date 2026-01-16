@@ -1,8 +1,11 @@
-from .visualizer import Visualizer
-
-class PPM(Visualizer):
+class PPM:
     @classmethod
     def write_ppm(cls, outfile, width, height, pixels):
-        outfile.write(f'P3\n{width} {height}\n')
-        for pixel in pixels:
-            outfile.write(" ".join(pixel))
+        w = width * 60
+        h = height * 60
+        outfile.write(f'P3\n{w} {h}\n255\n')
+        for y in range(0, h):
+            for x in range(0, w):
+                ind = int(y/60) + int(x/60)
+                px_str = [str(x) for x in pixels[ind]]
+                outfile.write(" ".join(px_str) + "\n")

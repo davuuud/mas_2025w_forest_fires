@@ -19,6 +19,7 @@ class Configuration:
             'neighborhood' : 'NeumannNeighborhood'
         },
         'output': {
+            'visualizers': 'PPMCellStateVisualizer',
             'directory': 'out/',
             'pattern': 'output-%%03d'
         }
@@ -57,6 +58,7 @@ class Configuration:
 
         self.preset = PresetGenerator.get(self.preset_source, self.width, self.height, self.preset_seed, self.preset_file)
 
+        self.visualizers = self.config.get('output', 'visualizers', fallback=self.DEFAULTS['output']['visualizers']).split(' ')
         self.output_dir = self.config.get('output', 'directory', fallback=self.DEFAULTS['output']['directory'])
         self.output_pattern = self.config.get('output', 'pattern', fallback=self.DEFAULTS['output']['pattern'])
         logger.debug(f"config.output_dir = {self.output_dir}")
