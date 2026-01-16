@@ -17,6 +17,8 @@ class RuleGenerator:
             elif rule =="IncreaseHotForNeighborRule":
                 rules.append(IncreaseHotForNeighborRule())
                 logger.debug("Append IncreaseHotForNeighborRule")
+            elif str =="IncreaseHeatExactlyOneFireRule":
+                rules.append(IncreaseHeatExactlyOneFireRule())
             else:
                 logger.error("Unknown Rule")
         return rules
@@ -32,6 +34,7 @@ class DecreaseWhenFireRule(Rule):
         mask = (state.cell_state == State.FIRE)
         
         # reduce oxygen, fuel, heat by 1 where the cell is on fire; clamp at 0
+        mask = (state.cell_state == State.FIRE)
         state.oxygen = np.where(mask, np.maximum(state.oxygen - 1, 0), state.oxygen)
         state.fuel = np.where(mask, np.maximum(state.fuel - 1, 0), state.fuel)
         state.heat = np.where(mask, np.maximum(state.heat - 1, 0), state.heat)
@@ -40,10 +43,16 @@ class DecreaseWhenFireRule(Rule):
     
 
 class IncreaseHotForNeighborRule(Rule):
-    def calculate(self, state: State, nbs: Neighborhood) -> State:
-        #oxygen, fuel, heat, state = state
-        #nbs_ox, nbs_fuel, nbs_heat, nbs_state = nbs
+    
+    def calculate(self, state, nbs):
         # every state with hot in the neighborhood increases hot of the cell, max 5
         state.heat = np.minimum(state.heat+nbs.cell_state[State.HOT],5)
         
+        return state
+    
+class IncreaseHeatExactlyOneFireRule(Rule):
+    def calculate(self, state, nbs):
+        mask = (nbs.cell_state[State.FIRE] == 1)
+        state.heat = np.where(mask,np.minimum(state.heat + 2, 5), state.heat)
+
         return state
