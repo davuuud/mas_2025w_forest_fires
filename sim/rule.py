@@ -1,33 +1,34 @@
-import numpy as np
 import logging
-from sim import State
-#from sim import Simulation
+import numpy as np
+from config import Configuration
+
+from .neighborhood import Neighborhood
+from .state import State
 
 class RuleGenerator:
     @classmethod
-    def get(cls, rules_str = [""]):
+    def get(cls, config: Configuration):
         logger = logging.getLogger("RuleGenerator")
         rules = []
-        for str in rules_str:
-            if str == "DecreseWhenFireRule":
-                rules.append(DecreseWhenFireRule())
-            elif str =="IncreaseHotForNeighborRule":
+        for rule in config.rules:
+            if rule == "DecreaseWhenFireRule":
+                rules.append(DecreaseWhenFireRule())
+                logger.debug("Append DecreaseWhenFireRule")
+            elif rule =="IncreaseHotForNeighborRule":
                 rules.append(IncreaseHotForNeighborRule())
+                logger.debug("Append IncreaseHotForNeighborRule")
             else:
-                logger.error("Unkown Rule")
+                logger.error("Unknown Rule")
         return rules
 
 
 class Rule:
-
-    #returns new state
-    def calculate(self, state, nbs):
+    def calculate(self, state: State, nbs: Neighborhood) -> State:
         pass
 
 
-class DecreseWhenFireRule(Rule):
-    
-    def calculate(self, state, nbs):
+class DecreaseWhenFireRule(Rule):
+    def calculate(self, state: State, nbs: Neighborhood) -> State:
         mask = (state.cell_state == State.FIRE)
         
         # reduce oxygen, fuel, heat by 1 where the cell is on fire; clamp at 0
@@ -37,9 +38,9 @@ class DecreseWhenFireRule(Rule):
         
         return state
     
+
 class IncreaseHotForNeighborRule(Rule):
-    
-    def calculate(self, state, nbs):
+    def calculate(self, state: State, nbs: Neighborhood) -> State:
         #oxygen, fuel, heat, state = state
         #nbs_ox, nbs_fuel, nbs_heat, nbs_state = nbs
         # every state with hot in the neighborhood increases hot of the cell, max 5

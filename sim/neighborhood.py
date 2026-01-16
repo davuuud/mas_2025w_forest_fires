@@ -1,28 +1,35 @@
+import logging
 import numpy as np
-from sim import State
+from config import Configuration
+
+from .state import State
 
 class NeighborhoodGenerator:
     @classmethod
-    def get(cls, neighborhood_str = ""):
+    def get(cls, config: Configuration):
+        logger = logging.getLogger("NeighborhoodGenerator")
         neighborhood = None
-        if neighborhood_str == "NeumannNeighborhood":
-            neighborhood = NeumannNeighborhood()
+        if config.neighborhood == "NeumannNeighborhood":
+            neighborhood = NeumannNeighborhood(config)
+            logger.debug("Von Neumann neighborhood chosen")
         else:
-            pass
+            neighborhood = NeumannNeighborhood(config)
+            logger.error("No or invalid neighborhood given -> fallback to Von Neumann neighborhood")
         return neighborhood
 
 
 class Neighborhood:
+    def __init__(self, config: Configuration):
+        self.config = config
 
-    #returns new state
-    def calculate(self, state):
+    def calculate(self, state: State):
         pass
 
 
 class NeumannNeighborhood(Neighborhood):
-    
-    def calculate(self, state, width, height):
-        #oxygen, fuel, heat, state = state
+    def calculate(self, state):
+        width = self.config.width
+        height = self.config.height
         
         # oxygen neighborhood
         nbs_ox = np.zeros((width+2, height+2))

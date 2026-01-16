@@ -1,4 +1,3 @@
-from .visualizer import Visualizer, VisualizerFactory
-from .ppm import PPM
+from .visualizer import VisualizerGenerator
 
-__all__ = ['Visualizer', 'VisualizerFactory', 'PPM']
+__all__ = ['VisualizerGenerator']

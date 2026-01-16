@@ -1,12 +1,11 @@
-
 class State:
+    STATESCOUNT = 4
+
     #states
     FIRE = 0
     INCOMBUSTIBLE = 1
     HOT = 2
     VEGETATION = 3
-
-    STATESCOUNT = 4
 
     def __init__(self, heat, fuel, oxygen, cell_state):
         self.heat = heat
@@ -15,4 +14,9 @@ class State:
         self.cell_state = cell_state
 
     def __str__(self):
-        return f"oxygen map:\n {self.oxygen} \n fuel map:\n {self.fuel}\n heat map:\n {self.heat}\n state map:\n {self.cell_state}"
+        return (
+            f"State map:\n {self.cell_state}\n"
+            f"Oxygen map:\n {self.oxygen}\n"
+            f"Fuel map:\n {self.fuel}\n"
+            f"Heat map:\n {self.heat}"
+        )

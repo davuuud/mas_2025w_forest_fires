@@ -2,7 +2,6 @@ import argparse
 import logging
 from config import Configuration
 from sim import Simulation
-from visual import PPM
 
 logger = logging.getLogger("main")
 

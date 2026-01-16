@@ -1,9 +1,12 @@
 import os
 from pathlib import Path
+from config import Configuration
+from sim.state import State
+
 from .ppm import PPM
 
 class Visualizer:
-    def __init__(self, config):
+    def __init__(self, config: Configuration):
         self.config = config 
         self.frame_id = 0
 
@@ -13,17 +16,17 @@ class Visualizer:
             os.mkdir(output_dir)
         return output_dir / Path(self.config.output_pattern % (self.frame_id))
 
-    def write_frame(self, state):
+    def write_frame(self, state: State):
         self.frame(state)
         self.frame_id += 1
 
-    def frame(self, state):
+    def frame(self, state: State):
         pass
 
 
-class VisualizerFactory:
+class VisualizerGenerator:
     @classmethod
-    def get_visualizers(cls, config):
+    def get(cls, config: Configuration):
         visualizers = []
         for vis in config.visualizers:
             if vis == "PPMCellStateVisualizer":
@@ -47,7 +50,7 @@ COLOR_MAP = {
 #     - heat
 
 class PPMCellStateVisualizer(Visualizer):
-    def frame(self, state):
+    def frame(self, state: State):
         width = self.config.width
         height = self.config.height
         cell_state = state.cell_state.flatten()
