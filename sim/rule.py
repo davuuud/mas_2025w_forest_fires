@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from abc import ABC, abstractmethod
 from config import Configuration
 
 from .neighborhood import Neighborhood
@@ -36,11 +37,12 @@ class RuleGenerator:
                 rules.append(DecreaseHeatInIncombustibleRule())
                 logger.debug("Append DecreaseHeatInIncombustibleRule")
             else:
-                logger.error("Unknown Rule")
+                logger.error("Invalid rule: {rule}.")
         return rules
 
 
-class Rule:
+class Rule(ABC):
+    @abstractmethod
     def calculate(self, state: State, nbs: Neighborhood) -> State:
         pass
 
@@ -59,9 +61,8 @@ class DecreaseWhenFireRule(Rule):
     
 
 class IncreaseHotForNeighborRule(Rule):
-    
+    # every state with hot in the neighborhood increases hot of the cell, max 5
     def calculate(self, state, nbs):
-        # every state with hot in the neighborhood increases hot of the cell, max 5
         state.heat = np.minimum(state.heat+nbs.cell_state[State.HOT],5)
         
         return state
@@ -112,18 +113,17 @@ class CellOnFireRule(Rule):
                  t_heat: int = 3, t_fuel: int = 1, t_oxygen: int = 1,
                  pb: float = 0.05, po: float = 0.10):
         # default values
+        self.config = config
+        self.approach = 'general'
         self.threshold_sum = threshold_sum
         self.t_heat = t_heat
         self.t_fuel = t_fuel
         self.t_oxygen = t_oxygen
         self.pb = pb
         self.po = po
-        self.approach = 'general'
-        self.config = None
 
         # override from config if provided
         if config is not None:
-            self.config = config
             self.approach = getattr(config, 'rule_approach', self.approach)
             self.threshold_sum = getattr(config, 'threshold_sum', self.threshold_sum)
             self.t_heat = getattr(config, 't_heat', self.t_heat)
@@ -133,7 +133,7 @@ class CellOnFireRule(Rule):
             self.po = getattr(config, 'po', self.po)
             seed = getattr(config, 'seed', None)
         else:
-            seed = None
+            seed = 123
 
         # reproducible RNG when seed provided
         self.rng = np.random.RandomState(seed)

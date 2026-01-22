@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 from config import Configuration
 from sim import Simulation
 from pathlib import Path
@@ -7,17 +8,28 @@ from ffmpeg import FFmpeg
 
 logger = logging.getLogger("main")
 
+
+def generate_video(config: Configuration):
+    output_dir = Path(config.output_dir)
+    if output_dir.exists() and output_dir.is_dir():
+        video_path = output_dir / Path(config.output_video)
+        if video_path.exists():
+            logger.warning("Deleting existing video {video_path}.")
+            os.remove(video_path)
+        output_pattern = output_dir / Path(config.output_pattern)
+        logger.info("Generating video {video_path} from {output_pattern}.")
+        FFmpeg().input(output_pattern).option("r", 1).output(video_path).execute()
+
+
 def main(config_file: str, seed: int):
     config = Configuration(config_file, seed=seed)
+
     sim = Simulation(config)
     sim.run(3)
 
     if config.output_video:
-        output_dir = Path(config.output_dir)
-        if output_dir.exists() and output_dir.is_dir():
-            first_file = next(output_dir.iterdir(), None)
-            output_pattern = Path(config.output_pattern).with_suffix(first_file.suffix)
-            FFmpeg().input(output_dir / output_pattern).option("r", 1).output(output_dir / Path(config.output_video)).execute()
+        generate_video(config)
+
 
 
 if __name__ == "__main__":

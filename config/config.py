@@ -22,9 +22,9 @@ class Configuration:
             'po': 0.10,
         },
         'output': {
-            'visualizers': 'PPMCellStateVisualizer',
+            'visualizers': 'CellStateVisualizer',
             'directory': 'out/',
-            'pattern': 'output-%03d',
+            'pattern': 'output-%03d.ppm',
             'scaling': 50
         }
     }
@@ -79,7 +79,7 @@ class Configuration:
         self.visualizers = self.config.get('output', 'visualizers', fallback=self.DEFAULTS['output']['visualizers']).split(' ')
         self.output_dir = self.config.get('output', 'directory', fallback=self.DEFAULTS['output']['directory'])
         self.output_pattern = self.config.get('output', 'pattern', fallback=self.DEFAULTS['output']['pattern'])
-        self.output_scaling = self.config.get('output', 'scaling', fallback=self.DEFAULTS['output']['scaling'])
+        self.output_scaling = self.config.getint('output', 'scaling', fallback=self.DEFAULTS['output']['scaling'])
         self.output_video = self.config.get('output', 'video', fallback=None)
         logger.debug(f"config.visualizers = {self.visualizers}")
         logger.debug(f"config.output_dir = {self.output_dir}")
