@@ -13,6 +13,14 @@ class Configuration:
             'seed': 123,
             'neighborhood' : 'NeumannNeighborhood',
             'rules': 'DecreaseWhenFireRule',
+            'rule_approach': 'general',
+            # thresholds and probabilities for CellOnFireRule
+            'threshold_sum': 8,
+            't_heat': 3,
+            't_fuel': 1,
+            't_oxygen': 1,
+            'pb': 0.05,
+            'po': 0.10,
         },
         'output': {
             'visualizers': 'PPMCellStateVisualizer',
@@ -49,8 +57,25 @@ class Configuration:
         ## Neighborhood and rules
         self.neighborhood= self.config.get('simulation', 'neighborhood', fallback=self.DEFAULTS['simulation']['neighborhood'])
         self.rules = self.config.get('simulation', 'rules', fallback=self.DEFAULTS['simulation']['rules']).split(' ')
+        # new: rule approach (one of: general, individual, stochastic)
+        self.rule_approach = self.config.get('simulation', 'rule_approach', fallback=self.DEFAULTS['simulation']['rule_approach'])
+        # thresholds and probabilities for CellOnFireRule
+        self.threshold_sum = self.config.getint('simulation', 'threshold_sum', fallback=self.DEFAULTS['simulation']['threshold_sum'])
+        self.t_heat = self.config.getint('simulation', 't_heat', fallback=self.DEFAULTS['simulation']['t_heat'])
+        self.t_fuel = self.config.getint('simulation', 't_fuel', fallback=self.DEFAULTS['simulation']['t_fuel'])
+        self.t_oxygen = self.config.getint('simulation', 't_oxygen', fallback=self.DEFAULTS['simulation']['t_oxygen'])
+        self.pb = self.config.getfloat('simulation', 'pb', fallback=self.DEFAULTS['simulation']['pb'])
+        self.po = self.config.getfloat('simulation', 'po', fallback=self.DEFAULTS['simulation']['po'])
+
         logger.debug(f"config.neighborhood = {self.neighborhood}")
         logger.debug(f"config.rules = {self.rules}")
+        logger.debug(f"config.rule_approach = {self.rule_approach}")
+        logger.debug(f"config.threshold_sum = {self.threshold_sum}")
+        logger.debug(f"config.t_heat = {self.t_heat}")
+        logger.debug(f"config.t_fuel = {self.t_fuel}")
+        logger.debug(f"config.t_oxygen = {self.t_oxygen}")
+        logger.debug(f"config.pb = {self.pb}")
+        logger.debug(f"config.po = {self.po}")
 
         # Visulization settings
         self.visualizers = self.config.get('output', 'visualizers', fallback=self.DEFAULTS['output']['visualizers']).split(' ')
@@ -71,6 +96,13 @@ class Configuration:
             f'preset_file={self.preset_file}, '
             f'neighborhood={self.neighborhood}, '
             f'rules={self.rules}, '
+            f'rule_approach={self.rule_approach}, '
+            f'threshold_sum={self.threshold_sum}, '
+            f't_heat={self.t_heat}, '
+            f't_fuel={self.t_fuel}, '
+            f't_oxygen={self.t_oxygen}, '
+            f'pb={self.pb}, '
+            f'po={self.po}, '
             f'visualizers={self.visualizers}, '
             f'output_dir={self.output_dir}, '
             f'output_pattern={self.output_pattern}'

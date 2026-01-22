@@ -54,6 +54,15 @@ class NeumannNeighborhood(Neighborhood):
         nbs_heat[1:-1,2:]+=state.heat #right
         nbs_heat[:-2,1:-1]+=state.heat #up
         nbs_heat[2:,1:-1]+=state.heat #down
+
+        # count neighbors that have a higher oxygen value than the center cell
+        padded_ox = np.zeros((width+2, height+2))
+        padded_ox[1:-1,1:-1] = state.oxygen
+        left_higher = padded_ox[1:-1,:-2] > state.oxygen
+        right_higher = padded_ox[1:-1,2:] > state.oxygen
+        up_higher = padded_ox[:-2,1:-1] > state.oxygen
+        down_higher = padded_ox[2:,1:-1] > state.oxygen
+        nbs_ox_higher_count = (left_higher.astype(int) + right_higher.astype(int) + up_higher.astype(int) + down_higher.astype(int))
         
         # state neighborhood (is array with numbers of all 4 states)
         nbs_state = []
@@ -67,4 +76,8 @@ class NeumannNeighborhood(Neighborhood):
             nbs_state_i[2:,1:-1]+=state_i #down
             nbs_state.insert(i,nbs_state_i[1:-1,1:-1])
 
-        return State(nbs_ox[1:-1,1:-1], nbs_fuel[1:-1,1:-1], nbs_heat[1:-1,1:-1], nbs_state)
+        res = State(nbs_ox[1:-1,1:-1], nbs_fuel[1:-1,1:-1], nbs_heat[1:-1,1:-1], nbs_state)
+        # attach helper information to the returned neighborhood State
+        res.oxygen_higher_count = nbs_ox_higher_count
+
+        return res
