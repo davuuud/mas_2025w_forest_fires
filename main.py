@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import shutil
+import sys
 from config import Configuration
 from sim import Simulation
 from pathlib import Path
@@ -44,6 +45,9 @@ def main(config_file: str, seed: int):
             else:
                 print("Okidoki. But I don't want to simulate anymore :'(")
                 exit(0)
+        else:
+            print("Error: '{output_dir.absolute()}' exists and is not a directory.", file=sys.stderr)
+            exit(1)
 
     sim = Simulation(config)
     sim.run()
