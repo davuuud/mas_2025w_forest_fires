@@ -9,6 +9,7 @@ class Configuration:
         },
         'simulation': {
             'size': 10,
+            'steps': 5,
             'seed': 123,
             'neighborhood' : 'NeumannNeighborhood',
             'rules': 'DecreaseWhenFireRule',
@@ -41,9 +42,11 @@ class Configuration:
         size = self.config.getint('simulation', 'size', fallback=self.DEFAULTS['simulation']['size'])
         self.width = self.config.getint('simulation', 'width', fallback=size)
         self.height = self.config.getint('simulation', 'height', fallback=size)
+        self.steps = self.config.getint('simulation', 'steps', fallback=self.DEFAULTS['simulation']['steps'])
         self.seed = seed if seed else self.config.getint('simulation', 'seed', fallback=self.DEFAULTS['simulation']['seed'])
         logger.debug(f"config.width = {self.width}")
         logger.debug(f"config.height = {self.height}")
+        logger.debug(f"config.steps = {self.steps}")
         logger.debug(f"config.seed = {self.seed}")
 
         ## Preset settings

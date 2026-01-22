@@ -44,10 +44,10 @@ class Visualizer(ABC):
 
 
 COLOR_MAP = {
-    State.FIRE:             [255, 0, 0], 
-    State.INCOMBUSTIBLE:    [0, 0, 0],
-    State.HOT:              [255, 165, 0],
-    State.VEGETATION:       [0, 255, 0], 
+    State.INCOMBUSTIBLE:    [0x23, 0x00, 0x07],
+    State.VEGETATION:       [0x60, 0x6C, 0x38], 
+    State.HOT:              [0xD2, 0x82, 0x31],
+    State.FIRE:             [0xC1, 0x1D, 0x1D], 
 }
 assert(len(COLOR_MAP) == State.STATESCOUNT)
 

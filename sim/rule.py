@@ -183,4 +183,3 @@ class CellOnFireRule(Rule):
         state.cell_state = np.where(to_incombustible, State.INCOMBUSTIBLE, state.cell_state)
 
         return state
-

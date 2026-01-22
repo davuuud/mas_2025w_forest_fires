@@ -23,7 +23,9 @@ class Simulation:
         self.visualizers = VisualizerGenerator.get(self.config)
 
 
-    def run(self, steps: int = 1):
+    def run(self, steps: int = None):
+        steps = steps if steps else self.config.steps 
+
         #pass intial frame to visualizer
         for v in self.visualizers:
             v.write_frame(self.state)
