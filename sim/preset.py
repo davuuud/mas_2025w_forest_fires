@@ -7,7 +7,7 @@ from .state import State
 class PresetGenerator:
     @classmethod
     def get(cls, config: Configuration) -> Preset:
-        logger = logging.getLogger()
+        logger = logging.getLogger("PresetGenerator")
         preset: Preset = None
         if config.preset_source == "random":
             preset = RandomPreset(config)

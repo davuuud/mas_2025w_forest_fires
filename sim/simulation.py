@@ -39,7 +39,3 @@ class Simulation:
             #pass frame to visualizer
             for v in self.visualizers:
                 v.write_frame(self.state)
-            print(f"##### step {step}: #####")
-            print(self.state)
-
-

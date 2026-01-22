@@ -4,8 +4,12 @@ class PPM:
         w = width * scaling
         h = height * scaling
         outfile.write(f'P3\n{w} {h}\n255\n')
-        for y in range(0, h):
-            for x in range(0, w):
-                ind = y//scaling + x//scaling
+        output = ""
+        for y in range(0, height):
+            line = ""
+            for x in range(0, width):
+                ind = y * width + x
                 px_str = [str(x) for x in pixels[ind]]
-                outfile.write(" ".join(px_str) + "\n")
+                line += (" ".join(px_str) + "\n") * scaling
+            output += line*scaling
+        outfile.write(output)

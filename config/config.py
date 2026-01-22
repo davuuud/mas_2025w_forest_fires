@@ -5,7 +5,6 @@ class Configuration:
     DEFAULTS = {
         'preset': {
             'source': 'random',
-            #'seed': 123,
             'file': None,
         },
         'simulation': {
@@ -25,7 +24,8 @@ class Configuration:
         'output': {
             'visualizers': 'PPMCellStateVisualizer',
             'directory': 'out/',
-            'pattern': 'output-%%03d',
+            'pattern': 'output-%03d',
+            'scaling': 50
         }
     }
 
@@ -48,10 +48,8 @@ class Configuration:
 
         ## Preset settings
         self.preset_source = self.config.get('preset', 'source', fallback=self.DEFAULTS['preset']['source'])
-        #self.preset_seed = self.config.getint('preset', 'seed', fallback=self.DEFAULTS['preset']['seed'])
         self.preset_file = self.config.get('preset', 'file', fallback=self.DEFAULTS['preset']['file'])
         logger.debug(f"config.preset_source = {self.preset_source}")
-        #logger.debug(f"config.preset_seed = {self.preset_seed}")
         logger.debug(f"config.preset_file = {self.preset_file}")
 
         ## Neighborhood and rules
@@ -81,9 +79,13 @@ class Configuration:
         self.visualizers = self.config.get('output', 'visualizers', fallback=self.DEFAULTS['output']['visualizers']).split(' ')
         self.output_dir = self.config.get('output', 'directory', fallback=self.DEFAULTS['output']['directory'])
         self.output_pattern = self.config.get('output', 'pattern', fallback=self.DEFAULTS['output']['pattern'])
+        self.output_scaling = self.config.get('output', 'scaling', fallback=self.DEFAULTS['output']['scaling'])
+        self.output_video = self.config.get('output', 'video', fallback=None)
         logger.debug(f"config.visualizers = {self.visualizers}")
         logger.debug(f"config.output_dir = {self.output_dir}")
         logger.debug(f"config.output_pattern = {self.output_pattern}")
+        logger.debug(f"config.output_scaling = {self.output_scaling}")
+        logger.debug(f"config.output_video = {self.output_video}")
 
     def __str__(self) -> str:
         return (
@@ -92,7 +94,6 @@ class Configuration:
             f'height={self.height}, '
             f'seed={self.seed}, '
             f'preset_source={self.preset_source}, '
-            #f'preset_seed={self.preset_seed}, '
             f'preset_file={self.preset_file}, '
             f'neighborhood={self.neighborhood}, '
             f'rules={self.rules}, '

@@ -57,4 +57,4 @@ class PPMCellStateVisualizer(Visualizer):
         cell_colors = [COLOR_MAP[x] for x in cell_state]
         ppm = PPM()
         with open(self.get_output_path().with_suffix(".ppm"), "w") as outfile:
-            ppm.write_ppm(outfile, width, height, cell_colors)
+            ppm.write_ppm(outfile, width, height, cell_colors, scaling=self.config.output_scaling)
