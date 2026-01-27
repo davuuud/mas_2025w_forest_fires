@@ -32,14 +32,15 @@ class Preset(ABC):
 
 
 class RandomPreset(Preset):
-    FIRE_PROBABILITY = 0.1
+    FIRE_PROBABILITY = 0.05
 
     def generate(self):
         size = (self.config.width, self.config.height)
+        rng = np.random.default_rng(self.config.seed)
 
         veg_state = np.full(size, State.VEGETATION)
         veg_oxygen = np.full(size, 4)
-        veg_fuel = np.zeros(size)
+        veg_fuel = rng.integers(0, 6, size=size)
         veg_heat = np.zeros(size)
 
         fire_state = np.full(size, State.FIRE)
@@ -47,7 +48,6 @@ class RandomPreset(Preset):
         fire_fuel = np.full(size, 4)
         fire_heat = np.full(size, 4)
 
-        rng = np.random.default_rng(self.config.seed)
         mask = rng.uniform(size=size)
         state = np.where(mask < self.FIRE_PROBABILITY, fire_state, veg_state)
         oxygen = np.where(mask < self.FIRE_PROBABILITY, fire_oxygen, veg_oxygen)
@@ -59,11 +59,14 @@ class RandomPreset(Preset):
 
 class FireWallPreset(Preset):
     def generate(self):
+        random = RandomPreset(self.config).generate()
         size = (self.config.width, self.config.height)
 
         state = np.full(size, State.VEGETATION)
-        oxygen = np.full(size, 4)
-        fuel = np.zeros(size)
+        #oxygen = (random.oxygen % 3) + 1
+        #fuel = (random.fuel % 3) + 1
+        oxygen = random.oxygen
+        fuel = random.fuel
         heat = np.zeros(size)
 
         state[:, 0] = State.FIRE
