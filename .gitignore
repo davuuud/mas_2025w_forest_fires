@@ -11,4 +11,4 @@ wheels/
 
 # Simulation output
 sim.log
-out/
+out*/
