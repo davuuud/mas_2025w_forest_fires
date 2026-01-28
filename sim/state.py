@@ -1,3 +1,4 @@
+import numpy as np
 class State:
     STATESCOUNT = 4
 
@@ -12,6 +13,7 @@ class State:
         self.fuel = fuel
         self.oxygen = oxygen
         self.cell_state = cell_state
+        self.time_since_burnt_out = np.zeros_like(cell_state, dtype=int)
 
     def __str__(self):
         return (

@@ -36,6 +36,12 @@ class RuleGenerator:
             elif rule == "DecreaseHeatInIncombustibleRule":
                 rules.append(DecreaseHeatInIncombustibleRule())
                 logger.debug("Append DecreaseHeatInIncombustibleRule")
+            elif rule == "RegenerateFromBurntOutRule":
+                rules.append(RegenerateFromBurntOutRule())
+                logger.debug("Append RegenerateFromBurntOutRule")
+            elif rule == "IncombustibleToVegetationRule":
+                rules.append(IncombustibleToVegetationRule())
+                logger.debug("Append IncombustibleToVegetationRule")
             else:
                 logger.error("Invalid rule: {rule}.")
         return rules
@@ -182,4 +188,44 @@ class CellOnFireRule(Rule):
         to_incombustible = burning_now & unsustainable
         state.cell_state = np.where(to_incombustible, State.INCOMBUSTIBLE, state.cell_state)
 
+        return state
+
+class RegenerateFromBurntOutRule(Rule):
+    # Regenerate fuel in burnt-out cells over time.
+    REGENERATION_STEPS = 5  # Number of time steps for 1 fuel to regenerate
+    
+    def calculate(self, state: State, nbs: Neighborhood) -> State:
+        # Identify burnt-out cells: INCOMBUSTIBLE with no fuel
+        burnt_out = (state.cell_state == State.INCOMBUSTIBLE)
+        
+        # Check if any neighbors are on fire
+        neighbors_on_fire = (nbs.cell_state[State.FIRE] > 0)
+        
+        # Increment time counter for burnt-out cells (only if they were already burnt out)
+        state.time_since_burnt_out = np.where(burnt_out, state.time_since_burnt_out + 1,0)
+        
+        # Regenerate fuel when: burnt out, enough time passed, and no neighbors on fire
+        can_regenerate = (
+            burnt_out & 
+            (state.time_since_burnt_out >= self.REGENERATION_STEPS) & 
+            ~neighbors_on_fire
+        )
+        
+        # Increase fuel by 1 and reset the timer
+        state.fuel = np.where(can_regenerate, state.fuel + 1, state.fuel)
+        state.time_since_burnt_out = np.where(can_regenerate, 0, state.time_since_burnt_out)
+        
+        return state
+
+
+class IncombustibleToVegetationRule(Rule):
+    # Convert burnt-out cells back to vegetation when fuel has recovered.
+    
+    def calculate(self, state: State, nbs: Neighborhood) -> State:
+        # Cells that can recover: INCOMBUSTIBLE with fuel > 2
+        can_recover = (state.cell_state == State.INCOMBUSTIBLE) & (state.fuel > 2)
+        
+        # Convert back to VEGETATION
+        state.cell_state = np.where(can_recover, State.VEGETATION, state.cell_state)
+        
         return state
