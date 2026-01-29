@@ -13,7 +13,7 @@ class PresetGenerator:
         print(config.preset_source == "firewall")
         if config.preset_source == "random":
             preset = RandomPreset(config)
-            logger.info("RemotePreset chosen")
+            logger.info("RandomPreset chosen")
         elif config.preset_source == "firewall":
             preset = FireWallPreset(config)
             logger.info("FireWallPreset chosen")
@@ -22,7 +22,7 @@ class PresetGenerator:
             logger.info("SparkPreset chosen")
         else:
             preset = RandomPreset(config)
-            logger.error("No or invalid preset given -> fallback to RemotePreset")
+            logger.error("No or invalid preset given -> fallback to RandomPreset")
         return preset
 
 
@@ -84,6 +84,7 @@ class FireWallPreset(Preset):
 
         return State(heat, fuel, oxygen, state)
     
+
 class SparkPreset(Preset):
     def generate(self):
         random = RandomPreset(self.config).generate()

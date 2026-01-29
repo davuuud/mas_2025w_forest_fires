@@ -54,12 +54,6 @@ COLOR_MAP = {
 }
 assert(len(COLOR_MAP) == State.STATESCOUNT)
 
-# Visualizers for every variable:
-#     - cell state 
-#     - oxygen
-#     - fuel
-#     - heat
-
 class CellStateVisualizer(Visualizer):
     def frame(self, state: State):
         width = self.config.width
@@ -68,6 +62,7 @@ class CellStateVisualizer(Visualizer):
         cell_colors = [COLOR_MAP[x] for x in cell_state]
         with open(self.get_output_path(), "w") as outfile:
             self.backend.write(outfile, width, height, cell_colors, scaling=self.config.output_scaling)
+
 
 class FullVisualizer(Visualizer):
     # Base color by state (RGB)

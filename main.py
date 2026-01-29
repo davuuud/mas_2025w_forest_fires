@@ -13,11 +13,13 @@ logger = logging.getLogger("main")
 YES = ["y", "yes", "yay", "ja", "jawohl", "yeah", "yessir", "jup"]
 NO = ["n", "no", "nay", "nein", "niemals", "nope", "never"]
 
+
 def yes_no_prompt(question: str) -> bool:
     response = input(question + " (y/N): ").strip().lower()
     if response in YES:
         return True
     return False
+
 
 def generate_video(config: Configuration):
     output_dir = Path(config.output_dir)
@@ -54,7 +56,6 @@ def main(config_file: str, seed: int):
 
     if config.output_video:
         generate_video(config)
-
 
 
 if __name__ == "__main__":
