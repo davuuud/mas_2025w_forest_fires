@@ -17,8 +17,8 @@ class Configuration:
             # thresholds and probabilities for CellOnFireRule
             'threshold_sum': 8,
             't_heat': 3,
-            't_fuel': 1,
-            't_oxygen': 1,
+            't_fuel': 2,
+            't_oxygen': 3,
             'pb': 0.05,
             'po': 0.10,
         },

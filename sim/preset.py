@@ -10,12 +10,16 @@ class PresetGenerator:
     def get(cls, config: Configuration) -> Preset:
         logger = logging.getLogger("PresetGenerator")
         preset: Preset = None
+        print(config.preset_source == "firewall")
         if config.preset_source == "random":
             preset = RandomPreset(config)
             logger.info("RemotePreset chosen")
-        if config.preset_source == "firewall":
+        elif config.preset_source == "firewall":
             preset = FireWallPreset(config)
             logger.info("FireWallPreset chosen")
+        elif config.preset_source == "spark":
+            preset = SparkPreset(config)
+            logger.info("SparkPreset chosen")
         else:
             preset = RandomPreset(config)
             logger.error("No or invalid preset given -> fallback to RemotePreset")
@@ -77,5 +81,22 @@ class FireWallPreset(Preset):
         fuel[:, -1] = 4
         heat[:, 0] = 4
         heat[:, -1] = 4
+
+        return State(heat, fuel, oxygen, state)
+    
+class SparkPreset(Preset):
+    def generate(self):
+        random = RandomPreset(self.config).generate()
+        size = (self.config.width, self.config.height)
+
+        state = np.full(size, State.VEGETATION)
+        oxygen = random.oxygen
+        fuel = (random.fuel % 3)
+        heat = np.zeros(size)
+
+        state[(self.config.width//2),(self.config.height//2)] = State.FIRE
+        oxygen[(self.config.width//2),(self.config.height//2)] = 4
+        fuel[(self.config.width//2),(self.config.height//2)] = 4
+        heat[(self.config.width//2),(self.config.height//2)] = 4
 
         return State(heat, fuel, oxygen, state)

@@ -74,11 +74,31 @@ class FullVisualizer(Visualizer):
     BASE_COLORS = {
         State.INCOMBUSTIBLE:    [0x23, 0x00, 0x07],
         State.VEGETATION:       [0x60, 0x6C, 0x38], 
-        State.HOT:              [0xFF, 0xC6, 0x00],
-        State.FIRE:             [0xC1, 0x1D, 0x1D], 
+        State.HOT:              [0xc9, 0x93, 0x2e],
+        State.FIRE:             [0xFF, 0x1D, 0x1D], 
     }
 
-    # Heat LUT: (add_to_R, subtract_from_G_and_B)
+    # Heat LUT for FIRE: aggressive red enhancement
+    HEAT_LUT_FIRE = [
+        (  0,   0),   # heat 0
+        ( 40,  20),
+        ( 80,  40),
+        (120,  60),
+        (160,  80),
+        (200, 100),   # heat 5
+    ]
+
+    # Heat LUT for HOT: maintain yellow, reduce blue to add intensity
+    HEAT_LUT_HOT = [
+        (  0,   0),   # heat 0
+        ( 10,  15),
+        ( 20,  25),
+        ( 30,  35),
+        ( 40,  45),
+        ( 50,  60),   # heat 5
+    ]
+
+    # Generic heat LUT for other states
     HEAT_LUT = [
         (  0,   0),   # heat 0
         ( 30,  10),
@@ -140,8 +160,14 @@ class FullVisualizer(Visualizer):
         # Base color
         r, g, b = self.BASE_COLORS[state]
 
-        # Heat influence
-        add_r, sub_gb = self.HEAT_LUT[int(heat)]
+        # State-specific heat influence
+        if state == State.FIRE:
+            add_r, sub_gb = self.HEAT_LUT_FIRE[int(heat)]
+        elif state == State.HOT:
+            add_r, sub_gb = self.HEAT_LUT_HOT[int(heat)]
+        else:
+            add_r, sub_gb = self.HEAT_LUT[int(heat)]
+        
         r += add_r
         g -= sub_gb
         b -= sub_gb
