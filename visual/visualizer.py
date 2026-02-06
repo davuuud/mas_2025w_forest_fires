@@ -2,12 +2,27 @@ import inspect
 import logging
 import os
 import sys
-from abc import ABC
+from abc import ABC, abstractmethod
+from ffmpeg import FFmpeg
 from pathlib import Path
 from config import Configuration
 from sim.state import State
 
-from .backend import ImageWriterBackendGenerator
+from .backend import WriterBackendGenerator
+
+logger = logging.getLogger("Visualizer")
+
+def generate_video(dir: Path, name: Path, input_pattern: str, rate: int) -> None:
+    if dir.exists() and dir.is_dir():
+        video_path = dir / name
+        if video_path.exists():
+            logger.warning(f"Deleting existing video {video_path}.")
+            os.remove(video_path)
+        logger.info(f"Generating video {video_path} from {input_pattern}.")
+        input_pattern = dir / Path(input_pattern)
+        FFmpeg().input(input_pattern).option("r", rate).output(video_path).execute()
+    else:
+        logger.critical(f"Output directory {dir} does not exist. It should be created by the visualizer, so something went horribly wrong.")
 
 
 class VisualizerContainer:
@@ -49,22 +64,36 @@ class VisualizerContainer:
 class Visualizer(ABC):
     def __init__(self, config: Configuration):
         self.config = config 
-        self.backend = ImageWriterBackendGenerator.get(self.config)
         self.frame_id = 0
+        file_ext = self.get_file_name().suffix
+        self.backend = WriterBackendGenerator.get(file_ext)
 
     def get_output_path(self):
         output_dir = Path(self.config.output_dir)
         if not output_dir.exists():
             os.mkdir(output_dir)
-        return output_dir / Path(self.config.output_pattern % (self.frame_id))
+        dir = output_dir / self.get_dir_name()
+        if not dir.exists():
+            os.mkdir(dir)
+        return dir / self.get_file_name()
 
     def visualize(self, state: State):
         self.frame(state)
         self.frame_id += 1
 
+    @abstractmethod
+    def get_dir_name(self) -> Path:
+        pass
+
+    @abstractmethod
+    def get_file_name(self) -> Path:
+        pass
+
+    @abstractmethod
     def frame(self, state: State):
         pass
 
+    @abstractmethod
     def finish(self, frames: list[State]):
         pass
 
@@ -78,16 +107,61 @@ COLOR_MAP = {
 assert(len(COLOR_MAP) == State.STATESCOUNT)
 
 class CellStateVisualizer(Visualizer):
+    NAME = 'CellStateVisualizer'
+    DEFAULT_CONFIG = {
+        'directory': 'cellstate/',
+        'pattern': 'output-%03d.ppm',
+        'scaling': 20,
+        'video': None,
+        'rate': 1,
+    }
+
+    def get_pattern(self) -> str:
+        pattern = self.config.get(self.NAME, 'pattern', fallback=self.DEFAULT_CONFIG['pattern'])
+        return pattern
+
+    def get_video(self) -> str:
+        video = self.config.get(self.NAME, 'video', fallback=self.DEFAULT_CONFIG['video'])
+        return video
+
+    def get_rate(self) -> int:
+        rate = self.config.getint(self.NAME, 'rate', fallback=self.DEFAULT_CONFIG['rate'])
+        return rate
+
+    def get_dir_name(self):
+        dir = self.config.get(self.NAME, 'directory', fallback=self.DEFAULT_CONFIG['directory'])
+        return Path(dir)
+
+    def get_file_name(self) -> Path:
+        return Path(self.get_pattern() % (self.frame_id))
+
     def frame(self, state: State):
         width = self.config.width
         height = self.config.height
+        scaling = self.config.getint(self.NAME, 'scaling', fallback=self.DEFAULT_CONFIG['scaling'])
         cell_state = state.cell_state.flatten()
         cell_colors = [COLOR_MAP[x] for x in cell_state]
         with open(self.get_output_path(), "w") as outfile:
-            self.backend.write(outfile, width, height, cell_colors, scaling=self.config.output_scaling)
+            self.backend.write(outfile, width, height, cell_colors, scaling=scaling)
+
+    def finish(self, frames):
+        video_name = self.get_video()
+        if video_name:
+            dir = Path(self.config.output_dir)
+            dir = dir / self.get_dir_name()
+            generate_video(dir, video_name, self.get_pattern(), self.get_rate())
 
 
 class FullVisualizer(Visualizer):
+    NAME = 'FullVisualizer'
+    DEFAULT_CONFIG = {
+        'directory': 'full/',
+        'pattern': 'output-%03d.ppm',
+        'scaling': 20,
+        'video': None,
+        'rate': 1,
+    }
+
     # Base color by state (RGB)
     BASE_COLORS = {
         State.INCOMBUSTIBLE:    [0x23, 0x00, 0x07],
@@ -204,10 +278,29 @@ class FullVisualizer(Visualizer):
             max(0, min(255, int(g))), 
             max(0, min(255, int(b)))]
 
+    def get_pattern(self) -> str:
+        pattern = self.config.get(self.NAME, 'pattern', fallback=self.DEFAULT_CONFIG['pattern'])
+        return pattern
+
+    def get_video(self) -> str:
+        video = self.config.get(self.NAME, 'video', fallback=self.DEFAULT_CONFIG['video'])
+        return video
+
+    def get_rate(self) -> int:
+        rate = self.config.getint(self.NAME, 'rate', fallback=self.DEFAULT_CONFIG['rate'])
+        return rate
+
+    def get_dir_name(self) -> Path:
+        dir = self.config.get(self.NAME, 'directory', fallback=self.DEFAULT_CONFIG['directory'])
+        return Path(dir)
+
+    def get_file_name(self) -> Path:
+        return Path(self.get_pattern() % (self.frame_id))
 
     def frame(self, state: State):
         width = self.config.width
         height = self.config.height
+        scaling = self.config.getint(self.NAME, 'scaling', fallback=self.DEFAULT_CONFIG['scaling'])
         # flatten arrays and compute color per cell
         heat_arr = state.heat.flatten()
         fuel_arr = state.fuel.flatten()
@@ -220,11 +313,36 @@ class FullVisualizer(Visualizer):
         ]
 
         with open(self.get_output_path(), "w") as outfile:
-            self.backend.write(outfile, width, height, cell_colors, scaling=self.config.output_scaling)
+            self.backend.write(outfile, width, height, cell_colors, scaling=scaling)
+
+    def finish(self, frames):
+        video_name = self.get_video()
+        if video_name:
+            dir = Path(self.config.output_dir)
+            dir = dir / self.get_dir_name()
+            generate_video(dir, video_name, self.get_pattern(), self.get_rate())
 
 
 class PlotVisualizer(Visualizer):
+    NAME = 'PlotVisualizer'
+    DEFAULT_CONFIG = {
+            'directory': 'plot/',
+            'name': 'output.plt',
+    }
+
+    def get_dir_name(self):
+        dir = self.config.get(self.NAME, 'directory', fallback=self.DEFAULT_CONFIG['directory'])
+        return Path(dir)
+
+    def get_file_name(self) -> Path:
+        name = self.config.get(self.NAME, 'name', fallback=self.DEFAULT_CONFIG['name'])
+        return Path(name)
+
+    def frame(self, state):
+        pass
+
     def finish(self, frames: list[State]):
+        print(self.get_output_path())
         print(len(frames))
 
 

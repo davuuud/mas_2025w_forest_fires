@@ -6,7 +6,6 @@ import sys
 from config import Configuration
 from sim.simulation import Simulation
 from pathlib import Path
-from ffmpeg import FFmpeg
 
 logger = logging.getLogger("main")
 
@@ -19,20 +18,6 @@ def yes_no_prompt(question: str) -> bool:
     if response in YES:
         return True
     return False
-
-
-def generate_video(config: Configuration):
-    output_dir = Path(config.output_dir)
-    if output_dir.exists() and output_dir.is_dir():
-        video_path = output_dir / Path(config.output_video)
-        if video_path.exists():
-            logger.warning(f"Deleting existing video {video_path}.")
-            os.remove(video_path)
-        output_pattern = output_dir / Path(config.output_pattern)
-        logger.info(f"Generating video {video_path} from {output_pattern}.")
-        FFmpeg().input(output_pattern).option("r", 1).output(video_path).execute()
-    else:
-        logger.critical(f"Output directory {output_dir} does not exist. It should be created by the visualizer, so something went horribly wrong.")
 
 
 def main(config_file: str, seed: int):
@@ -54,9 +39,6 @@ def main(config_file: str, seed: int):
     logger.debug("Starting simulation")
     sim = Simulation(config)
     sim.run()
-
-    if config.output_video:
-        generate_video(config)
 
 
 if __name__ == "__main__":

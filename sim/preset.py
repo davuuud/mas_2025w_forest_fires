@@ -12,13 +12,13 @@ class PresetGenerator:
         preset: Preset = None
         if config.preset_source == "random":
             preset = RandomPreset(config)
-            logger.info("RandomPreset chosen")
+            logger.debug("RandomPreset chosen")
         elif config.preset_source == "firewall":
             preset = FireWallPreset(config)
-            logger.info("FireWallPreset chosen")
+            logger.debug("FireWallPreset chosen")
         elif config.preset_source == "spark":
             preset = SparkPreset(config)
-            logger.info("SparkPreset chosen")
+            logger.debug("SparkPreset chosen")
         else:
             preset = RandomPreset(config)
             logger.error("No or invalid preset given -> fallback to RandomPreset")

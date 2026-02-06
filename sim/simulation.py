@@ -39,3 +39,5 @@ class Simulation:
             
             #pass frame to visualizer
             self.visualizers.visualize(self.state)
+
+        self.visualizers.finish()

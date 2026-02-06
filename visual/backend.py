@@ -3,26 +3,28 @@ from abc import ABC, abstractmethod
 from config import Configuration
 from pathlib import Path
 
-class ImageWriterBackendGenerator:
+class WriterBackendGenerator:
     @classmethod
-    def get(cls, config: Configuration) -> ImageWriterBackend:
-        logger = logging.getLogger("ImageWriterBackendGenerator")
-        ext = Path(config.output_pattern).suffix
+    def get(cls, ext: str) -> WriterBackend:
+        logger = logging.getLogger("WriterBackendGenerator")
         if ext == "ppm":
             logger.debug("ppm file format recognized.")
             return PPM()
+        elif ext == "plt":
+            logger.debug("plt file format recognized.")
+            return PLT()
         else:
             logger.debug("Unrecognized file format {ext}. Using ppm instead.")
             return PPM()
 
 
-class ImageWriterBackend(ABC):
+class WriterBackend(ABC):
     @abstractmethod
     def write(self, outfile, width: int, height: int, pixels, scaling: int):
         pass
 
 
-class PPM(ImageWriterBackend):
+class PPM(WriterBackend):
     def write(self, outfile, width: int, height: int, pixels, scaling: int = 60):
         w = width * scaling
         h = height * scaling
@@ -36,3 +38,8 @@ class PPM(ImageWriterBackend):
                 line += (" ".join(px_str) + "\n") * scaling
             output += line*scaling
         outfile.write(output)
+
+
+class PLT(WriterBackend):
+    def write(self, outfile, width, height, pixels, scaling):
+        print("TODO")

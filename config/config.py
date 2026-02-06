@@ -25,9 +25,7 @@ class Configuration:
         'output': {
             'visualizers': 'CellStateVisualizer',
             'directory': 'out/',
-            'pattern': 'output-%03d.ppm',
-            'scaling': 50
-        }
+        },
     }
 
     def __init__(self, config_file, seed=None):
@@ -81,14 +79,14 @@ class Configuration:
         # Visulization settings
         self.visualizers = self.config.get('output', 'visualizers', fallback=self.DEFAULTS['output']['visualizers']).split(' ')
         self.output_dir = self.config.get('output', 'directory', fallback=self.DEFAULTS['output']['directory'])
-        self.output_pattern = self.config.get('output', 'pattern', fallback=self.DEFAULTS['output']['pattern'])
-        self.output_scaling = self.config.getint('output', 'scaling', fallback=self.DEFAULTS['output']['scaling'])
-        self.output_video = self.config.get('output', 'video', fallback=None)
         logger.debug(f"config.visualizers = {self.visualizers}")
         logger.debug(f"config.output_dir = {self.output_dir}")
-        logger.debug(f"config.output_pattern = {self.output_pattern}")
-        logger.debug(f"config.output_scaling = {self.output_scaling}")
-        logger.debug(f"config.output_video = {self.output_video}")
+
+    def get(self, *args, **kwargs):
+        return self.config.get(*args, **kwargs)
+
+    def getint(self, *args, **kwargs):
+        return self.config.getint(*args, **kwargs)
 
     def __str__(self) -> str:
         return (
@@ -109,6 +107,5 @@ class Configuration:
             f'po={self.po}, '
             f'visualizers={self.visualizers}, '
             f'output_dir={self.output_dir}, '
-            f'output_pattern={self.output_pattern}'
             ')'
         )
