@@ -5,6 +5,7 @@ description = "Group project 'Forest Fires' of the Modeling and Simulation 2025W
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "matplotlib>=3.10.8",
     "numpy>=2.3.5",
     "python-ffmpeg>=2.0.12",
 ]

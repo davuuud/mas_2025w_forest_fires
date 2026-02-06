@@ -1,5 +1,7 @@
+import copy
 import inspect
 import logging
+import numpy as np
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -8,7 +10,7 @@ from pathlib import Path
 from config import Configuration
 from sim.state import State
 
-from .backend import WriterBackendGenerator
+from .backend import BackendGenerator, ImageBackend, PlotBackend
 
 logger = logging.getLogger("Visualizer")
 
@@ -52,7 +54,7 @@ class VisualizerContainer:
         return None
 
     def visualize(self, state: State) -> None:
-        self.frames.append(state)
+        self.frames.append(copy.copy(state))
         for vis in self.visualizers:
             vis.visualize(state)
 
@@ -63,10 +65,12 @@ class VisualizerContainer:
 
 class Visualizer(ABC):
     def __init__(self, config: Configuration):
+        self.logger = logging.getLogger(type(self).__name__)
         self.config = config 
         self.frame_id = 0
         file_ext = self.get_file_name().suffix
-        self.backend = WriterBackendGenerator.get(file_ext)
+        self.logger.debug(f"Got file suffix: {file_ext}")
+        self.backend = BackendGenerator.get(file_ext)
 
     def get_output_path(self):
         output_dir = Path(self.config.output_dir)
@@ -323,8 +327,8 @@ class FullVisualizer(Visualizer):
             generate_video(dir, video_name, self.get_pattern(), self.get_rate())
 
 
-class PlotVisualizer(Visualizer):
-    NAME = 'PlotVisualizer'
+class HeatPlotVisualizer(Visualizer):
+    NAME = 'HeatPlotVisualizer'
     DEFAULT_CONFIG = {
             'directory': 'plot/',
             'name': 'output.plt',
@@ -342,8 +346,17 @@ class PlotVisualizer(Visualizer):
         pass
 
     def finish(self, frames: list[State]):
-        print(self.get_output_path())
-        print(len(frames))
+        if isinstance(self.backend, PlotBackend):
+            x = []
+            y = []
+            for i, f in enumerate(frames):
+                x.append(i)
+                y.append(np.mean(f.heat))
+            output_path = self.get_output_path()
+            self.logger.debug(f"Plot output path: {output_path}")
+            self.backend.write(output_path, x, y, x_label="Step", y_label="Avg. heat")
+        else:
+            logger.error(f"{type(self.backend).__name__} is not a child of PlotBackend.")
 
 
 if __name__ == "__main__":
