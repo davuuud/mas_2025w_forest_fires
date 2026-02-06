@@ -1,6 +1,6 @@
 import logging
 from config import Configuration
-from visual import VisualizerGenerator
+from visual.visualizer import VisualizerContainer
 
 from .preset import PresetGenerator
 from .neighborhood import NeighborhoodGenerator
@@ -20,15 +20,14 @@ class Simulation:
 
         self.rules = RuleGenerator.get(self.config)
 
-        self.visualizers = VisualizerGenerator.get(self.config)
+        self.visualizers = VisualizerContainer(self.config)
 
 
     def run(self, steps: int = None):
         steps = steps if steps else self.config.steps 
 
         #pass intial frame to visualizer
-        for v in self.visualizers:
-            v.write_frame(self.state)
+        self.visualizers.visualize(self.state)
 
         for step in range(steps):
             #calculate neighborhood
@@ -39,5 +38,6 @@ class Simulation:
                 self.state = rule.calculate(self.state, nbs)
             
             #pass frame to visualizer
-            for v in self.visualizers:
-                v.write_frame(self.state)
+            self.visualizers.visualize(self.state)
+
+        self.visualizers.finish()
