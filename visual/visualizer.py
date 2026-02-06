@@ -1,29 +1,50 @@
+import inspect
 import logging
 import os
-from abc import ABC, abstractmethod
+import sys
+from abc import ABC
 from pathlib import Path
 from config import Configuration
 from sim.state import State
 
 from .backend import ImageWriterBackendGenerator
 
-class VisualizerGenerator:
-    @classmethod
-    def get(cls, config: Configuration):
-        logger = logging.getLogger("VisualizerGenerator")
-        visualizers = []
-        for vis in config.visualizers:
-            if vis == "CellStateVisualizer":
-                logger.debug("Append CellStateVisualizer.")
-                visualizers.append(CellStateVisualizer(config))
-            elif vis == "FullVisualizer":
-                logger.debug("Append FullVisualizer.")
-                visualizers.append(FullVisualizer(config))
-            else:
-                logger.error("Invalid visualizer: {vis}.")
-                pass
-        return visualizers
 
+class VisualizerContainer:
+    def __init__(self, config: Configuration):
+        self.logger = logging.getLogger("VisualizerContainer")
+
+        mod = sys.modules[__name__]
+        classes = inspect.getmembers(mod, inspect.isclass)
+        self.available_visualizers = {name: klass for name, klass in classes if issubclass(klass, Visualizer) and klass is not Visualizer}
+
+        self.visualizers: list[Visualizer] = []
+        self.frames: list[State] = []
+
+        done = []
+        for name in config.visualizers:
+            visualizer = self.get(name)
+            if not visualizer or name in done:
+                continue
+            self.visualizers.append(visualizer(config))
+
+    def get(self, name):
+        visualizer = self.available_visualizers.get(name, None)
+        if visualizer:
+            self.logger.debug(f"Append {name}")
+            return visualizer
+        self.logger.error(f"Invalid visualizer: {name}")
+        return None
+
+    def visualize(self, state: State) -> None:
+        self.frames.append(state)
+        for vis in self.visualizers:
+            vis.visualize(state)
+
+    def finish(self) -> None:
+        for vis in self.visualizers:
+            vis.finish(self.frames)
+    
 
 class Visualizer(ABC):
     def __init__(self, config: Configuration):
@@ -37,12 +58,14 @@ class Visualizer(ABC):
             os.mkdir(output_dir)
         return output_dir / Path(self.config.output_pattern % (self.frame_id))
 
-    def write_frame(self, state: State):
+    def visualize(self, state: State):
         self.frame(state)
         self.frame_id += 1
 
-    @abstractmethod
     def frame(self, state: State):
+        pass
+
+    def finish(self, frames: list[State]):
         pass
 
 
@@ -198,3 +221,13 @@ class FullVisualizer(Visualizer):
 
         with open(self.get_output_path(), "w") as outfile:
             self.backend.write(outfile, width, height, cell_colors, scaling=self.config.output_scaling)
+
+
+class PlotVisualizer(Visualizer):
+    def finish(self, frames: list[State]):
+        print(len(frames))
+
+
+if __name__ == "__main__":
+    conf = Configuration("sim.ini")
+    c = VisualizerContainer(conf)

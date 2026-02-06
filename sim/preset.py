@@ -10,7 +10,6 @@ class PresetGenerator:
     def get(cls, config: Configuration) -> Preset:
         logger = logging.getLogger("PresetGenerator")
         preset: Preset = None
-        print(config.preset_source == "firewall")
         if config.preset_source == "random":
             preset = RandomPreset(config)
             logger.info("RandomPreset chosen")

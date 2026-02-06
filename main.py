@@ -4,7 +4,7 @@ import os
 import shutil
 import sys
 from config import Configuration
-from sim import Simulation
+from sim.simulation import Simulation
 from pathlib import Path
 from ffmpeg import FFmpeg
 
@@ -51,6 +51,7 @@ def main(config_file: str, seed: int):
             print("Error: '{output_dir.absolute()}' exists and is not a directory.", file=sys.stderr)
             exit(1)
 
+    logger.debug("Starting simulation")
     sim = Simulation(config)
     sim.run()
 
