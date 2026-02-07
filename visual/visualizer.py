@@ -190,8 +190,7 @@ class CellStateVisualizer(VideoVisualizer):
         scaling = self.get_scaling()
         cell_state = state.cell_state.flatten()
         cell_colors = [COLOR_MAP[x] for x in cell_state]
-        with open(self.get_output_path(), "w") as outfile:
-            self.backend.write(outfile, width, height, cell_colors, scaling=scaling)
+        self.backend.write(self.get_output_path(), width, height, cell_colors, scaling=scaling)
 
 
 class FullVisualizer(VideoVisualizer):
@@ -334,8 +333,7 @@ class FullVisualizer(VideoVisualizer):
             for h, f, o, s in zip(heat_arr, fuel_arr, oxy_arr, st_arr)
         ]
 
-        with open(self.get_output_path(), "w") as outfile:
-            self.backend.write(outfile, width, height, cell_colors, scaling=scaling)
+        self.backend.write(self.get_output_path(), width, height, cell_colors, scaling=scaling)
 
 
 class HeatPlotVisualizer(PlotVisualizer):
