@@ -37,7 +37,8 @@ class RuleGenerator:
                 rules.append(DecreaseHeatInIncombustibleRule())
                 logger.debug("Append DecreaseHeatInIncombustibleRule")
             elif rule == "RegenerateFromBurntOutRule":
-                rules.append(RegenerateFromBurntOutRule())
+                regen_rate = config.getint('RegenerateFromBurntOutRule', 'regen_rate', fallback=10)
+                rules.append(RegenerateFromBurntOutRule(regen_rate=regen_rate))
                 logger.debug("Append RegenerateFromBurntOutRule")
             elif rule == "IncombustibleToVegetationRule":
                 rules.append(IncombustibleToVegetationRule())
@@ -192,8 +193,10 @@ class CellOnFireRule(Rule):
 
 class RegenerateFromBurntOutRule(Rule):
     # Regenerate fuel in burnt-out cells over time.
-    REGENERATION_STEPS = 10  # Number of time steps for 1 fuel to regenerate
-    
+    def __init__(self, regen_rate=10):
+        super().__init__()
+        self.regen_rate = regen_rate  # Number of time steps for 1 fuel to regenerate
+
     def calculate(self, state: State, nbs: Neighborhood) -> State:
         # Identify burnt-out cells: INCOMBUSTIBLE with no fuel
         burnt_out = (state.cell_state == State.INCOMBUSTIBLE)
@@ -207,7 +210,7 @@ class RegenerateFromBurntOutRule(Rule):
         # Regenerate fuel when: burnt out, enough time passed, and no neighbors on fire
         can_regenerate = (
             burnt_out & 
-            (state.time_since_burnt_out >= self.REGENERATION_STEPS) & 
+            (state.time_since_burnt_out >= self.regen_rate) & 
             ~neighbors_on_fire
         )
         
