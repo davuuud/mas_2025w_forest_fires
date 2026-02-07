@@ -36,6 +36,7 @@ class ImageBackend(Backend):
 
 
 class PlotBackend(Backend):
+    @abstractmethod
     def write(self, outfile, x, y, *args, **kwargs):
         pass
 
@@ -60,6 +61,7 @@ class PLT(PlotBackend):
     def write(self, outfile, x, y, *args, x_label: str= "x", y_label: str = "y", format: str = "PNG", dpi: int = 300, **kwargs):
         self.logger.debug(f"Output file: {outfile}")
         self.logger.debug(f"Output format: {outfile}")
+        plt.figure()
         plt.plot(x, y, *args, **kwargs)
         plt.xlabel(x_label)
         plt.ylabel(y_label)

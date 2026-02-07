@@ -69,13 +69,22 @@ class Visualizer(ABC):
         self.frame_id = 0
         
     def get_dir_name(self) -> str:
-        return self.config.get(self.__class__.__name__, 'directory', fallback=self.DEFAULT_CONFIG.get('directory'))
+        dir = self.config.get(self.__class__.__name__, 'directory', fallback=self.DEFAULT_CONFIG.get('directory'))
+        if not dir:
+            raise NotImplementedError(f"{self.__class__.__name__}.DEFAULT_CONFIG is missing 'directory'.")
+        return dir
 
     def get_pattern(self) -> str:
-        return self.config.get(self.__class__.__name__, 'pattern', fallback=self.DEFAULT_CONFIG.get('pattern'))
+        pattern = self.config.get(self.__class__.__name__, 'pattern', fallback=self.DEFAULT_CONFIG.get('pattern'))
+        if not pattern:
+            raise NotImplementedError(f"{self.__class__.__name__}.DEFAULT_CONFIG is missing 'pattern'.")
+        return pattern
 
     def get_file_name(self) -> str:
-        return self.config.get(self.__class__.__name__, 'name', fallback=self.DEFAULT_CONFIG.get('name'))
+        name = self.config.get(self.__class__.__name__, 'name', fallback=self.DEFAULT_CONFIG.get('name'))
+        if not name:
+            raise NotImplementedError(f"{self.__class__.__name__}.DEFAULT_CONFIG is missing 'name'.")
+        return name
 
     def get_output_path(self) -> Path:
         output_dir = Path(self.config.output_dir)
@@ -171,13 +180,6 @@ class CellStateVisualizer(VideoVisualizer):
         cell_colors = [COLOR_MAP[x] for x in cell_state]
         with open(self.get_output_path(), "w") as outfile:
             self.backend.write(outfile, width, height, cell_colors, scaling=scaling)
-
-    def finish(self):
-        video_name = self.get_video()
-        if video_name:
-            dir = Path(self.config.output_dir)
-            dir = dir / self.get_dir_name()
-            generate_video(dir, video_name, self.get_pattern(), self.get_rate())
 
 
 class FullVisualizer(VideoVisualizer):
@@ -351,7 +353,7 @@ class HeatPlotVisualizer(PlotVisualizer):
 class AllAttributePlotVisualizer(PlotVisualizer):
     DEFAULT_CONFIG = {
             'directory': 'allplot/',
-            'name': 'output.png',
+            'pattern': 'output-%s.png',
     }
 
     def __init__(self, config):
@@ -361,8 +363,11 @@ class AllAttributePlotVisualizer(PlotVisualizer):
         self.avg_oxygen = []
         self.avg_fuel = []
 
+    def get_file_name(self):
+        return ""
+
     def frame(self, state):
-        self.avg_cell_state.append(np.mean(state.cel))
+        self.avg_cell_state.append(np.mean(state.cell_state))
         self.avg_heat.append(np.mean(state.heat))
         self.avg_oxygen.append(np.mean(state.oxygen))
         self.avg_fuel.append(np.mean(state.fuel))
@@ -372,10 +377,10 @@ class AllAttributePlotVisualizer(PlotVisualizer):
             x = [x for x in range(len(self.avg_heat))]
             output_path = self.get_output_path()
             self.logger.debug(f"Plot output path: {output_path}")
-            self.backend.write(output_path, x, self.avg_cell_state, x_label="Step", y_label="Avg. cell state")
-            self.backend.write(output_path, x, self.avg_heat, x_label="Step", y_label="Avg. heat")
-            self.backend.write(output_path, x, self.avg_oxygen, x_label="Step", y_label="Avg. oxygen")
-            self.backend.write(output_path, x, self.avg_fuel, x_label="Step", y_label="Avg. fuel")
+            self.backend.write(output_path / (self.get_pattern() % ("cell_state")), x, self.avg_cell_state, x_label="Step", y_label="Avg. cell state")
+            self.backend.write(output_path / (self.get_pattern() % ("heat")), x, self.avg_heat, x_label="Step", y_label="Avg. heat")
+            self.backend.write(output_path / (self.get_pattern() % ("oxygen")), x, self.avg_oxygen, x_label="Step", y_label="Avg. oxygen")
+            self.backend.write(output_path / (self.get_pattern() % ("fuel")), x, self.avg_fuel, x_label="Step", y_label="Avg. fuel")
         else:
             logger.error(f"{self.backend.__class__.__name__} is not a child of PlotBackend.")
 
