@@ -154,6 +154,18 @@ class PlotVisualizer(Visualizer):
         self.logger.debug(f"PlotVisualizer in da house!!!")
         self.backend = BackendGenerator.get(".plt")
 
+    def get_plot_properties(self):
+        props_name = self.config.get(self.__class__.__name__, 'plot_properties', fallback=None)
+        if self.config.config.has_section(props_name):
+            return self.config.config[props_name]
+        return {}
+
+    def get_label_properties(self):
+        props_name = self.config.get(self.__class__.__name__, 'label_properties', fallback=None)
+        if self.config.config.has_section(props_name):
+            return self.config.config[props_name]
+        return {}
+
 
 COLOR_MAP = {
     State.INCOMBUSTIBLE:    [0x23, 0x00, 0x07],
@@ -376,11 +388,13 @@ class AllAttributePlotVisualizer(PlotVisualizer):
         if isinstance(self.backend, PlotBackend):
             x = [x for x in range(len(self.avg_heat))]
             output_path = self.get_output_path()
+            plot_props = self.get_plot_properties()
+            label_props = self.get_label_properties()
             self.logger.debug(f"Plot output path: {output_path}")
-            self.backend.write(output_path / (self.get_pattern() % ("cell_state")), x, self.avg_cell_state, x_label="Step", y_label="Avg. cell state")
-            self.backend.write(output_path / (self.get_pattern() % ("heat")), x, self.avg_heat, x_label="Step", y_label="Avg. heat")
-            self.backend.write(output_path / (self.get_pattern() % ("oxygen")), x, self.avg_oxygen, x_label="Step", y_label="Avg. oxygen")
-            self.backend.write(output_path / (self.get_pattern() % ("fuel")), x, self.avg_fuel, x_label="Step", y_label="Avg. fuel")
+            self.backend.write(output_path / (self.get_pattern() % ("cell_state")), x, self.avg_cell_state, x_label="Step", y_label="Avg. cell state", labelprops=label_props, **plot_props)
+            self.backend.write(output_path / (self.get_pattern() % ("heat")), x, self.avg_heat, x_label="Step", y_label="Avg. heat", labelprops=label_props,**plot_props)
+            self.backend.write(output_path / (self.get_pattern() % ("oxygen")), x, self.avg_oxygen, x_label="Step", y_label="Avg. oxygen", labelprops=label_props, **plot_props)
+            self.backend.write(output_path / (self.get_pattern() % ("fuel")), x, self.avg_fuel, x_label="Step", y_label="Avg. fuel", labelprops=label_props, **plot_props)
         else:
             logger.error(f"{self.backend.__class__.__name__} is not a child of PlotBackend.")
 

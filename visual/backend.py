@@ -58,11 +58,12 @@ class PPM(ImageBackend):
 
 
 class PLT(PlotBackend):
-    def write(self, outfile, x, y, *args, x_label: str= "x", y_label: str = "y", format: str = "PNG", dpi: int = 300, **kwargs):
+    def write(self, outfile, x, y, *args, x_label: str= "x", y_label: str = "y", format: str = "PNG", dpi: int = 300, labelprops=None, **kwargs):
         self.logger.debug(f"Output file: {outfile}")
         self.logger.debug(f"Output format: {outfile}")
         plt.figure()
         plt.plot(x, y, *args, **kwargs)
-        plt.xlabel(x_label)
-        plt.ylabel(y_label)
+        plt.xlabel(x_label, **labelprops)
+        plt.ylabel(y_label, **labelprops)
+        plt.grid(True)
         plt.savefig(outfile, format=format, dpi=dpi)
