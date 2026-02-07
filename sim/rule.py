@@ -205,7 +205,7 @@ class RegenerateFromBurntOutRule(Rule):
         neighbors_on_fire = (nbs.cell_state[State.FIRE] > 0)
         
         # Increment time counter for burnt-out cells (only if they were already burnt out)
-        state.time_since_burnt_out = np.where(burnt_out, state.time_since_burnt_out + 1,0)
+        state.time_since_burnt_out = np.where(burnt_out, state.time_since_burnt_out + 1, 0)
         
         # Regenerate fuel when: burnt out, enough time passed, and no neighbors on fire
         can_regenerate = (

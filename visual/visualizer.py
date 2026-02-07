@@ -368,6 +368,10 @@ class AllAttributePlotVisualizer(PlotVisualizer):
 
     def __init__(self, config):
         super().__init__(config)
+        self.num_fir = []
+        self.num_inc = []
+        self.num_hot = []
+        self.num_veg = []
         self.avg_cell_state = []
         self.avg_heat = []
         self.avg_oxygen = []
@@ -377,6 +381,11 @@ class AllAttributePlotVisualizer(PlotVisualizer):
         return ""
 
     def frame(self, state):
+        self.num_fir.append((state.cell_state == State.FIRE).sum())
+        self.num_inc.append((state.cell_state == State.INCOMBUSTIBLE).sum())
+        self.num_hot.append((state.cell_state == State.HOT).sum())
+        self.num_veg.append((state.cell_state == State.VEGETATION).sum())
+
         self.avg_cell_state.append(np.mean(state.cell_state))
         self.avg_heat.append(np.mean(state.heat))
         self.avg_oxygen.append(np.mean(state.oxygen))
@@ -393,6 +402,18 @@ class AllAttributePlotVisualizer(PlotVisualizer):
             self.backend.write(output_path / (self.get_pattern() % ("heat")), x, self.avg_heat, x_label="Step", y_label="Avg. heat", labelprops=label_props,**plot_props)
             self.backend.write(output_path / (self.get_pattern() % ("oxygen")), x, self.avg_oxygen, x_label="Step", y_label="Avg. oxygen", labelprops=label_props, **plot_props)
             self.backend.write(output_path / (self.get_pattern() % ("fuel")), x, self.avg_fuel, x_label="Step", y_label="Avg. fuel", labelprops=label_props, **plot_props)
+
+            import matplotlib.pyplot as plt
+            plt.figure()
+            line_inc, = plt.plot(x, self.num_inc, label="Incombustible")
+            line_hot, = plt.plot(x, self.num_hot, label="Hot")
+            line_veg, = plt.plot(x, self.num_veg, label="Vegetation")
+            line_fir, = plt.plot(x, self.num_fir, label="Fire")
+            plt.xlabel("Step", **label_props)
+            plt.ylabel("# Cells in State", **label_props)
+            plt.legend(handles=[line_fir, line_inc, line_hot, line_veg])
+            plt.savefig(output_path / (self.get_pattern() % ("num_states")))
+
         else:
             logger.error(f"{self.backend.__class__.__name__} is not a child of PlotBackend.")
 
