@@ -34,9 +34,7 @@ class VisualizerContainer:
         mod = sys.modules[__name__]
         classes = inspect.getmembers(mod, inspect.isclass)
         self.available_visualizers = {name: klass for name, klass in classes if issubclass(klass, Visualizer) and klass is not Visualizer}
-
         self.visualizers: list[Visualizer] = []
-        self.frames: list[State] = []
 
         done = []
         for name in config.visualizers:
@@ -54,13 +52,12 @@ class VisualizerContainer:
         return None
 
     def visualize(self, state: State) -> None:
-        self.frames.append(copy.copy(state))
         for vis in self.visualizers:
             vis.visualize(state)
 
     def finish(self) -> None:
         for vis in self.visualizers:
-            vis.finish(self.frames)
+            vis.finish()
     
 
 class Visualizer(ABC):
@@ -68,9 +65,6 @@ class Visualizer(ABC):
         self.logger = logging.getLogger(type(self).__name__)
         self.config = config 
         self.frame_id = 0
-        file_ext = self.get_file_name().suffix
-        self.logger.debug(f"Got file suffix: {file_ext}")
-        self.backend = BackendGenerator.get(file_ext)
 
     def get_output_path(self):
         output_dir = Path(self.config.output_dir)
@@ -98,8 +92,23 @@ class Visualizer(ABC):
         pass
 
     @abstractmethod
-    def finish(self, frames: list[State]):
+    def finish(self):
         pass
+
+
+class ImageVisualizer(Visualizer):
+    def __init__(self, config):
+        super().__init__(config)
+        file_ext = self.get_file_name().suffix
+        self.logger.debug(f"Got file suffix: {file_ext}")
+        self.backend = BackendGenerator.get(file_ext)
+
+
+class PlotVisualizer(Visualizer):
+    def __init__(self, config):
+        super().__init__(config)
+        self.logger.debug(f"Visualizing a plot")
+        self.backend = BackendGenerator.get(".plt")
 
 
 COLOR_MAP = {
@@ -110,7 +119,7 @@ COLOR_MAP = {
 }
 assert(len(COLOR_MAP) == State.STATESCOUNT)
 
-class CellStateVisualizer(Visualizer):
+class CellStateVisualizer(ImageVisualizer):
     NAME = 'CellStateVisualizer'
     DEFAULT_CONFIG = {
         'directory': 'cellstate/',
@@ -148,7 +157,7 @@ class CellStateVisualizer(Visualizer):
         with open(self.get_output_path(), "w") as outfile:
             self.backend.write(outfile, width, height, cell_colors, scaling=scaling)
 
-    def finish(self, frames):
+    def finish(self):
         video_name = self.get_video()
         if video_name:
             dir = Path(self.config.output_dir)
@@ -156,7 +165,7 @@ class CellStateVisualizer(Visualizer):
             generate_video(dir, video_name, self.get_pattern(), self.get_rate())
 
 
-class FullVisualizer(Visualizer):
+class FullVisualizer(ImageVisualizer):
     NAME = 'FullVisualizer'
     DEFAULT_CONFIG = {
         'directory': 'full/',
@@ -319,7 +328,7 @@ class FullVisualizer(Visualizer):
         with open(self.get_output_path(), "w") as outfile:
             self.backend.write(outfile, width, height, cell_colors, scaling=scaling)
 
-    def finish(self, frames):
+    def finish(self):
         video_name = self.get_video()
         if video_name:
             dir = Path(self.config.output_dir)
@@ -327,12 +336,16 @@ class FullVisualizer(Visualizer):
             generate_video(dir, video_name, self.get_pattern(), self.get_rate())
 
 
-class HeatPlotVisualizer(Visualizer):
+class HeatPlotVisualizer(PlotVisualizer):
     NAME = 'HeatPlotVisualizer'
     DEFAULT_CONFIG = {
             'directory': 'plot/',
-            'name': 'output.plt',
+            'name': 'output.png',
     }
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.avg_heat = []
 
     def get_dir_name(self):
         dir = self.config.get(self.NAME, 'directory', fallback=self.DEFAULT_CONFIG['directory'])
@@ -343,15 +356,12 @@ class HeatPlotVisualizer(Visualizer):
         return Path(name)
 
     def frame(self, state):
-        pass
+        self.avg_heat.append(np.mean(state.heat))
 
-    def finish(self, frames: list[State]):
+    def finish(self):
         if isinstance(self.backend, PlotBackend):
-            x = []
-            y = []
-            for i, f in enumerate(frames):
-                x.append(i)
-                y.append(np.mean(f.heat))
+            x = [x for x in range(len(self.avg_heat))]
+            y = self.avg_heat
             output_path = self.get_output_path()
             self.logger.debug(f"Plot output path: {output_path}")
             self.backend.write(output_path, x, y, x_label="Step", y_label="Avg. heat")

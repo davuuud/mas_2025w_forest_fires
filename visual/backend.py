@@ -63,5 +63,4 @@ class PLT(PlotBackend):
         plt.plot(x, y, *args, **kwargs)
         plt.xlabel(x_label)
         plt.ylabel(y_label)
-        plt.show()
         plt.savefig(outfile, format=format, dpi=dpi)
