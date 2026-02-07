@@ -62,11 +62,22 @@ class VisualizerContainer:
 
 class Visualizer(ABC):
     def __init__(self, config: Configuration):
-        self.logger = logging.getLogger(type(self).__name__)
+        if not hasattr(self, 'DEFAULT_CONFIG'):
+            raise NotImplementedError(f"{self.__class__.__name__} is missing DEFAULT_CONFIG")
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.config = config 
         self.frame_id = 0
+        
+    def get_dir_name(self) -> str:
+        return self.config.get(self.__class__.__name__, 'directory', fallback=self.DEFAULT_CONFIG.get('directory'))
 
-    def get_output_path(self):
+    def get_pattern(self) -> str:
+        return self.config.get(self.__class__.__name__, 'pattern', fallback=self.DEFAULT_CONFIG.get('pattern'))
+
+    def get_file_name(self) -> str:
+        return self.config.get(self.__class__.__name__, 'name', fallback=self.DEFAULT_CONFIG.get('name'))
+
+    def get_output_path(self) -> Path:
         output_dir = Path(self.config.output_dir)
         if not output_dir.exists():
             os.mkdir(output_dir)
@@ -80,14 +91,6 @@ class Visualizer(ABC):
         self.frame_id += 1
 
     @abstractmethod
-    def get_dir_name(self) -> Path:
-        pass
-
-    @abstractmethod
-    def get_file_name(self) -> Path:
-        pass
-
-    @abstractmethod
     def frame(self, state: State):
         pass
 
@@ -99,15 +102,47 @@ class Visualizer(ABC):
 class ImageVisualizer(Visualizer):
     def __init__(self, config):
         super().__init__(config)
-        file_ext = self.get_file_name().suffix
+
+        file_name = self.get_file_name()
+        if isinstance(file_name, str):
+            file_name = Path(file_name)
+        file_ext = file_name.suffix
+
         self.logger.debug(f"Got file suffix: {file_ext}")
         self.backend = BackendGenerator.get(file_ext)
+
+    def get_file_name(self) -> str:
+        return self.get_pattern() % (self.frame_id)
+
+    def get_scaling(self) -> int:
+        scaling = self.config.getint(self.__class__.__name__, 'scaling', fallback=self.DEFAULT_CONFIG.get('scaling'))
+        if not scaling:
+            raise NotImplementedError(f"{self.__class__.__name__}.DEFAULT_CONFIG is missing 'rate'.")
+        return scaling
+
+
+class VideoVisualizer(ImageVisualizer):
+    def get_video(self) -> str:
+        return self.config.get(self.__class__.__name__, 'video', fallback=self.DEFAULT_CONFIG.get('video'))
+
+    def get_rate(self) -> int:
+        rate = self.config.getint(self.__class__.__name__, 'rate', fallback=self.DEFAULT_CONFIG.get('rate'))
+        if not rate:
+            raise NotImplementedError(f"{self.__class__.__name__}.DEFAULT_CONFIG is missing 'rate'.")
+        return rate
+
+    def finish(self):
+        video_name = self.get_video()
+        if video_name:
+            dir = Path(self.config.output_dir)
+            dir = dir / self.get_dir_name()
+            generate_video(dir, video_name, self.get_pattern(), self.get_rate())
 
 
 class PlotVisualizer(Visualizer):
     def __init__(self, config):
         super().__init__(config)
-        self.logger.debug(f"Visualizing a plot")
+        self.logger.debug(f"PlotVisualizer in da house!!!")
         self.backend = BackendGenerator.get(".plt")
 
 
@@ -119,8 +154,7 @@ COLOR_MAP = {
 }
 assert(len(COLOR_MAP) == State.STATESCOUNT)
 
-class CellStateVisualizer(ImageVisualizer):
-    NAME = 'CellStateVisualizer'
+class CellStateVisualizer(VideoVisualizer):
     DEFAULT_CONFIG = {
         'directory': 'cellstate/',
         'pattern': 'output-%03d.ppm',
@@ -129,29 +163,10 @@ class CellStateVisualizer(ImageVisualizer):
         'rate': 1,
     }
 
-    def get_pattern(self) -> str:
-        pattern = self.config.get(self.NAME, 'pattern', fallback=self.DEFAULT_CONFIG['pattern'])
-        return pattern
-
-    def get_video(self) -> str:
-        video = self.config.get(self.NAME, 'video', fallback=self.DEFAULT_CONFIG['video'])
-        return video
-
-    def get_rate(self) -> int:
-        rate = self.config.getint(self.NAME, 'rate', fallback=self.DEFAULT_CONFIG['rate'])
-        return rate
-
-    def get_dir_name(self):
-        dir = self.config.get(self.NAME, 'directory', fallback=self.DEFAULT_CONFIG['directory'])
-        return Path(dir)
-
-    def get_file_name(self) -> Path:
-        return Path(self.get_pattern() % (self.frame_id))
-
     def frame(self, state: State):
         width = self.config.width
         height = self.config.height
-        scaling = self.config.getint(self.NAME, 'scaling', fallback=self.DEFAULT_CONFIG['scaling'])
+        scaling = self.get_scaling()
         cell_state = state.cell_state.flatten()
         cell_colors = [COLOR_MAP[x] for x in cell_state]
         with open(self.get_output_path(), "w") as outfile:
@@ -165,8 +180,7 @@ class CellStateVisualizer(ImageVisualizer):
             generate_video(dir, video_name, self.get_pattern(), self.get_rate())
 
 
-class FullVisualizer(ImageVisualizer):
-    NAME = 'FullVisualizer'
+class FullVisualizer(VideoVisualizer):
     DEFAULT_CONFIG = {
         'directory': 'full/',
         'pattern': 'output-%03d.ppm',
@@ -291,29 +305,10 @@ class FullVisualizer(ImageVisualizer):
             max(0, min(255, int(g))), 
             max(0, min(255, int(b)))]
 
-    def get_pattern(self) -> str:
-        pattern = self.config.get(self.NAME, 'pattern', fallback=self.DEFAULT_CONFIG['pattern'])
-        return pattern
-
-    def get_video(self) -> str:
-        video = self.config.get(self.NAME, 'video', fallback=self.DEFAULT_CONFIG['video'])
-        return video
-
-    def get_rate(self) -> int:
-        rate = self.config.getint(self.NAME, 'rate', fallback=self.DEFAULT_CONFIG['rate'])
-        return rate
-
-    def get_dir_name(self) -> Path:
-        dir = self.config.get(self.NAME, 'directory', fallback=self.DEFAULT_CONFIG['directory'])
-        return Path(dir)
-
-    def get_file_name(self) -> Path:
-        return Path(self.get_pattern() % (self.frame_id))
-
     def frame(self, state: State):
         width = self.config.width
         height = self.config.height
-        scaling = self.config.getint(self.NAME, 'scaling', fallback=self.DEFAULT_CONFIG['scaling'])
+        scaling = self.get_scaling()
         # flatten arrays and compute color per cell
         heat_arr = state.heat.flatten()
         fuel_arr = state.fuel.flatten()
@@ -328,16 +323,8 @@ class FullVisualizer(ImageVisualizer):
         with open(self.get_output_path(), "w") as outfile:
             self.backend.write(outfile, width, height, cell_colors, scaling=scaling)
 
-    def finish(self):
-        video_name = self.get_video()
-        if video_name:
-            dir = Path(self.config.output_dir)
-            dir = dir / self.get_dir_name()
-            generate_video(dir, video_name, self.get_pattern(), self.get_rate())
-
 
 class HeatPlotVisualizer(PlotVisualizer):
-    NAME = 'HeatPlotVisualizer'
     DEFAULT_CONFIG = {
             'directory': 'plot/',
             'name': 'output.png',
@@ -346,14 +333,6 @@ class HeatPlotVisualizer(PlotVisualizer):
     def __init__(self, config):
         super().__init__(config)
         self.avg_heat = []
-
-    def get_dir_name(self):
-        dir = self.config.get(self.NAME, 'directory', fallback=self.DEFAULT_CONFIG['directory'])
-        return Path(dir)
-
-    def get_file_name(self) -> Path:
-        name = self.config.get(self.NAME, 'name', fallback=self.DEFAULT_CONFIG['name'])
-        return Path(name)
 
     def frame(self, state):
         self.avg_heat.append(np.mean(state.heat))
@@ -369,6 +348,41 @@ class HeatPlotVisualizer(PlotVisualizer):
             logger.error(f"{type(self.backend).__name__} is not a child of PlotBackend.")
 
 
+class AllAttributePlotVisualizer(PlotVisualizer):
+    DEFAULT_CONFIG = {
+            'directory': 'allplot/',
+            'name': 'output.png',
+    }
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.avg_cell_state = []
+        self.avg_heat = []
+        self.avg_oxygen = []
+        self.avg_fuel = []
+
+    def frame(self, state):
+        self.avg_cell_state.append(np.mean(state.cel))
+        self.avg_heat.append(np.mean(state.heat))
+        self.avg_oxygen.append(np.mean(state.oxygen))
+        self.avg_fuel.append(np.mean(state.fuel))
+
+    def finish(self):
+        if isinstance(self.backend, PlotBackend):
+            x = [x for x in range(len(self.avg_heat))]
+            output_path = self.get_output_path()
+            self.logger.debug(f"Plot output path: {output_path}")
+            self.backend.write(output_path, x, self.avg_cell_state, x_label="Step", y_label="Avg. cell state")
+            self.backend.write(output_path, x, self.avg_heat, x_label="Step", y_label="Avg. heat")
+            self.backend.write(output_path, x, self.avg_oxygen, x_label="Step", y_label="Avg. oxygen")
+            self.backend.write(output_path, x, self.avg_fuel, x_label="Step", y_label="Avg. fuel")
+        else:
+            logger.error(f"{self.backend.__class__.__name__} is not a child of PlotBackend.")
+
+
+
 if __name__ == "__main__":
     conf = Configuration("sim.ini")
-    c = VisualizerContainer(conf)
+    # c = VisualizerContainer(conf)
+    c = AllAttributePlotVisualizer(conf)
+    print(c.get_dir_name())
