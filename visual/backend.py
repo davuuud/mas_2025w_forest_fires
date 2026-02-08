@@ -73,7 +73,7 @@ class PNG(ImageBackend):
 
 
 class PLT(PlotBackend):
-    def write(self, outfile, x, y, *args, x_label: str= "x", y_label: str = "y", format: str = "PNG", dpi: int = 300, labelprops=None, **kwargs):
+    def write(self, outfile, x, y, *args, x_label: str= "x", y_label: str = "y", format: str = "PNG", dpi: int = 300, labelprops={}, **kwargs):
         self.logger.debug(f"Output file: {outfile}")
         self.logger.debug(f"Output format: {outfile}")
         plt.figure()

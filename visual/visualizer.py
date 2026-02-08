@@ -355,7 +355,7 @@ class HeatPlotVisualizer(PlotVisualizer):
             y = self.avg_heat
             output_path = self.get_output_path()
             self.logger.debug(f"Plot output path: {output_path}")
-            self.backend.write(output_path, x, y, x_label="Step", y_label="Avg. heat")
+            self.backend.write(output_path, x, y, x_label="Step", y_label="Avg. heat", labelprops=self.get_label_properties(), **self.get_plot_properties())
         else:
             logger.error(f"{type(self.backend).__name__} is not a child of PlotBackend.")
 
